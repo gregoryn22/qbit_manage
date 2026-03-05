@@ -40,6 +40,8 @@ class ShareLimits:
         self.min_num_seeds_tag = qbit_manager.config.share_limits_min_num_seeds_tag
         # tag for last active
         self.last_active_tag = qbit_manager.config.share_limits_last_active_tag
+        # tag for pending cleanup (cleanup-eligible group, max_seeding_time not yet reached)
+        self.pending_cleanup_tag = qbit_manager.config.share_limits_pending_cleanup_tag
         self.group_tag = None  # tag for the share limit group
 
         self.update_share_limits()
@@ -90,6 +92,7 @@ class ShareLimits:
                 if group_config["cleanup"] and len(self.tdel_dict) > 0:
                     self.cleanup_torrents_for_group(group_name, group_config["priority"])
 
+        self._remove_pending_cleanup_from_unmatched_torrents(torrent_list_filter)
         end_time = time()
         duration = end_time - start_time
         logger.debug(f"Share limits command completed in {duration:.2f} seconds")
@@ -294,6 +297,8 @@ class ShareLimits:
             if tags_changed or exclusion_tag_added:
                 torrent = self.qbt.get_torrents({"torrent_hashes": t_hash})[0]
 
+            self._update_pending_cleanup_tag(torrent, group_config, tor_reached_seed_limit)
+
             if self._should_update_torrent(
                 check_max_ratio,
                 check_max_seeding_time,
@@ -412,6 +417,46 @@ class ShareLimits:
             or check_multiple_share_limits_tag
             or (tor_reached_seed_limit and (group_config["cleanup"] or group_config["upload_speed_on_limit_reached"] != 0))
         )
+
+    def _update_pending_cleanup_tag(self, torrent, group_config, tor_reached_seed_limit):
+        """Add or remove pending_cleanup_tag based on group config and torrent state."""
+        if self.config.dry_run:
+            return
+        max_seeding_time = group_config.get("max_seeding_time")
+        has_tag = is_tag_in_torrent(self.pending_cleanup_tag, torrent.tags)
+        # Resolve seeding_time_limit (mirror _has_reached_seeding_time_limit logic)
+        seeding_time_limit = None
+        if max_seeding_time is not None and max_seeding_time != -1:
+            if max_seeding_time >= 0:
+                seeding_time_limit = max_seeding_time
+            elif max_seeding_time == -2 and self.qbt.global_max_seeding_time_enabled:
+                seeding_time_limit = self.qbt.global_max_seeding_time
+        # Remove tag when: limit reached, cleanup false, no max_seeding_time, or blocking tags present
+        should_remove = (
+            tor_reached_seed_limit
+            or not group_config.get("cleanup", False)
+            or seeding_time_limit is None
+            or torrent.seeding_time >= seeding_time_limit * 60
+            or is_tag_in_torrent(self.min_num_seeds_tag, torrent.tags)
+            or is_tag_in_torrent(self.last_active_tag, torrent.tags)
+            or is_tag_in_torrent(self.min_seeding_time_tag, torrent.tags)
+        )
+        if should_remove:
+            if has_tag:
+                torrent.remove_tags(self.pending_cleanup_tag)
+        else:
+            if not has_tag:
+                torrent.add_tags(self.pending_cleanup_tag)
+
+    def _remove_pending_cleanup_from_unmatched_torrents(self, torrent_list_filter):
+        """Remove pending_cleanup_tag from torrents that have it but were not in any group."""
+        if self.config.dry_run:
+            return
+        torrent_list = self.qbt.get_torrents(torrent_list_filter)
+        checked_hashes = set(self.torrent_hash_checked)
+        for torrent in torrent_list:
+            if torrent.hash not in checked_hashes and is_tag_in_torrent(self.pending_cleanup_tag, torrent.tags):
+                torrent.remove_tags(self.pending_cleanup_tag)
 
     def update_share_limits_tag_for_torrent(self, torrent):
         """Updates share limits tag for a torrent if needed. Returns True if tags were changed."""

@@ -11,6 +11,7 @@ concurrency:
 
 jobs:
   build-binaries:
+    if: github.repository == 'StuffAnThings/qbit_manage'
     name: Build Standalone Binaries (${{ matrix.os }})
     permissions:
       contents: read
@@ -270,6 +271,7 @@ jobs:
           compression-level: 0
 
   prepare-release-assets:
+    if: github.repository == 'StuffAnThings/qbit_manage'
     runs-on: ubuntu-latest
     needs: build-binaries
     permissions:
@@ -404,6 +406,7 @@ jobs:
             }
 
   docker-release:
+    if: github.repository == 'StuffAnThings/qbit_manage'
     runs-on: ubuntu-latest
 
     steps:
@@ -471,6 +474,7 @@ jobs:
             ghcr.io/${{ env.OWNER_LC }}/qbit_manage:latest
 
   create-release:
+    if: github.repository == 'StuffAnThings/qbit_manage'
     runs-on: ubuntu-latest
     needs: [prepare-release-assets, docker-release]
     permissions:

@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   pypi-publish:
+    if: github.repository == 'StuffAnThings/qbit_manage'
     runs-on: ubuntu-latest
     permissions:
       contents: read

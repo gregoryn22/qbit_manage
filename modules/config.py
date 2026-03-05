@@ -315,6 +315,9 @@ class Config:
             "share_limits_last_active_tag": self.util.check_for_attribute(
                 self.data, "share_limits_last_active_tag", parent="settings", default="LastActiveLimitNotReached"
             ),
+            "share_limits_pending_cleanup_tag": self.util.check_for_attribute(
+                self.data, "share_limits_pending_cleanup_tag", parent="settings", default="PendingCleanup"
+            ),
             "cat_filter_completed": self.util.check_for_attribute(
                 self.data, "cat_filter_completed", parent="settings", var_type="bool", default=True
             ),
@@ -359,6 +362,7 @@ class Config:
         self.share_limits_min_seeding_time_tag = self.settings["share_limits_min_seeding_time_tag"]
         self.share_limits_min_num_seeds_tag = self.settings["share_limits_min_num_seeds_tag"]
         self.share_limits_last_active_tag = self.settings["share_limits_last_active_tag"]
+        self.share_limits_pending_cleanup_tag = self.settings["share_limits_pending_cleanup_tag"]
 
         self.default_ignore_tags = [
             self.nohardlinks_tag,
@@ -366,6 +370,7 @@ class Config:
             self.share_limits_min_seeding_time_tag,
             self.share_limits_min_num_seeds_tag,
             self.share_limits_last_active_tag,
+            self.share_limits_pending_cleanup_tag,
             self.share_limits_tag,
             self.private_tag,
         ]
