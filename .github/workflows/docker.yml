@@ -1,29 +1,23 @@
-name: Docker Build (Fork Testing)
+name: Docker Build and Push
 
 on:
   push:
-    branches: [ feat/pending_cleanup ]   # or whatever branch you use for testing
-  workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [ main, master ]
 
 jobs:
-  docker-build:
+  docker:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write   # Required for pushing to ghcr.io
-
+      packages: write
     steps:
-      - name: Set lower case owner name
-        run: echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
-        env:
-          OWNER: '${{ github.repository_owner }}'
-
       - name: Check Out Repo
         uses: actions/checkout@v6
+
+      - name: Set owner
+        run: echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
+        env:
+          OWNER: ${{ github.repository_owner }}
 
       - name: Login to ghcr.io
         uses: docker/login-action@v3
@@ -62,5 +56,5 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: |
-            ghcr.io/${{ env.OWNER_LC }}/qbit_manage:test-${{ github.sha }}
-            ghcr.io/${{ env.OWNER_LC }}/qbit_manage:testing
+            ghcr.io/${{ env.OWNER_LC }}/qbit_manage:latest
+            ghcr.io/${{ env.OWNER_LC }}/qbit_manage:${{ steps.get_version.outputs.APP_VERSION }}
