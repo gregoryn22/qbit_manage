@@ -11,7 +11,7 @@ updates:
       interval: "daily"
       time: "07:00"
       timezone: "America/Toronto"
-    target-branch: "develop"
+    target-branch: "main"
     assignees:
       - "bobokun"
     # Specify the file to check for dependencies
@@ -28,6 +28,6 @@ updates:
       timezone: "America/Toronto"
     assignees:
       - "bobokun"
-    target-branch: "develop"
+    target-branch: "main"
     ignore:
       - dependency-name: "salsify/action-detect-and-tag-new-version"
