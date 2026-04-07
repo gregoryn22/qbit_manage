@@ -59,6 +59,33 @@ To run the script in an interactive terminal with a list of possible commands ru
 python qbit_manage.py -h
 ```
 
+## Upstream Sync Runbook (Personal Forks)
+
+If you maintain a personal branch while following upstream, use this branch model:
+
+- Personal branch: `master`
+- Dedicated upstream sync branch: `sync/upstream`
+- Upstream source: `StuffAnThings/qbit_manage:master`
+
+Default sync path (safe):
+
+1. Scheduled/manual `Sync Upstream via PR` updates `sync/upstream` from upstream.
+1. The workflow opens or updates a PR from `sync/upstream` into `master`.
+1. Review CI results and merge that PR into `master`.
+
+Manual linear-history path (exception only):
+
+1. Run `Manual Rebase Sync` (`workflow_dispatch`) with explicit source/target branches.
+1. The workflow rebases `target_branch` onto `source_branch`.
+1. On conflicts, the workflow fails with local recovery commands and does not push partial state.
+
+Conflict checklist:
+
+- Reproduce locally with full history (`git fetch --prune`).
+- Rebase `master` onto `origin/sync/upstream`.
+- Resolve conflicts (workflows commonly conflict first), run tests, then push with explicit refspec and `--force-with-lease`.
+- If needed, roll back safely by resetting to the last known-good commit and pushing explicitly to your personal branch.
+
 ## Support
 
 * If you have any questions or require support please join the [Notifiarr Discord](https://discord.com/invite/AURf8Yz) and post your question under the `qbit-manage` channel.

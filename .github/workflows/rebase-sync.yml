@@ -1,0 +1,90 @@
+name: Manual Rebase Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: "Branch to rebase onto (usually dedicated sync branch)"
+        required: false
+        default: "sync/upstream"
+      target_branch:
+        description: "Personal branch to rewrite with linear history"
+        required: false
+        default: "master"
+      upstream_repo:
+        description: "Upstream owner/repo for preflight verification"
+        required: false
+        default: "StuffAnThings/qbit_manage"
+      upstream_branch:
+        description: "Upstream branch for informational output"
+        required: false
+        default: "master"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manual-rebase-sync-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_BRANCH: ${{ github.event.inputs.source_branch || 'sync/upstream' }}
+      TARGET_BRANCH: ${{ github.event.inputs.target_branch || 'master' }}
+      UPSTREAM_REPO: ${{ github.event.inputs.upstream_repo || 'StuffAnThings/qbit_manage' }}
+      UPSTREAM_BRANCH: ${{ github.event.inputs.upstream_branch || 'master' }}
+    steps:
+      - name: Checkout target branch with full history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.target_branch || 'master' }}
+          fetch-depth: 0
+
+      - name: Preflight checks
+        run: |
+          set -euo pipefail
+          echo "Repository: ${GITHUB_REPOSITORY}"
+          echo "Source branch: ${SOURCE_BRANCH}"
+          echo "Target branch: ${TARGET_BRANCH}"
+          echo "Upstream reference: ${UPSTREAM_REPO}:${UPSTREAM_BRANCH}"
+
+          if [ "${GITHUB_REPOSITORY}" = "${UPSTREAM_REPO}" ]; then
+            echo "::error::This workflow is for fork/personal repos only. Refusing to run against upstream."
+            exit 1
+          fi
+
+          git fetch --prune origin
+          git status --porcelain
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Working tree is not clean before rebase."
+            exit 1
+          fi
+
+          if ! git show-ref --verify --quiet "refs/remotes/origin/${SOURCE_BRANCH}"; then
+            echo "::error::Source branch origin/${SOURCE_BRANCH} not found."
+            exit 1
+          fi
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Rebase target onto source
+        run: |
+          set -euo pipefail
+          git checkout -B "${TARGET_BRANCH}" "origin/${TARGET_BRANCH}"
+          if ! git rebase "origin/${SOURCE_BRANCH}"; then
+            echo "::error::Rebase conflict detected."
+            echo "::error::Resolve locally: git checkout ${TARGET_BRANCH} && git fetch origin && git rebase origin/${SOURCE_BRANCH}"
+            echo "::error::After resolving, push explicitly: git push origin HEAD:refs/heads/${TARGET_BRANCH} --force-with-lease"
+            git rebase --abort || true
+            exit 1
+          fi
+
+      - name: Push rebased target branch
+        run: |
+          set -euo pipefail
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}" --force-with-lease
