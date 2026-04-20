@@ -38,11 +38,13 @@ jobs:
       UPSTREAM_BRANCH: ${{ github.event.inputs.upstream_branch || 'master' }}
       SYNC_BRANCH: ${{ github.event.inputs.sync_branch || 'sync/upstream' }}
       PERSONAL_BRANCH: ${{ github.event.inputs.personal_branch || 'master' }}
+      PUSH_TOKEN: ${{ secrets.WORKFLOWS_TOKEN != '' && secrets.WORKFLOWS_TOKEN || github.token }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ env.PUSH_TOKEN }}
 
       - name: Configure git
         run: |

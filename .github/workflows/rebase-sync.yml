@@ -35,12 +35,14 @@ jobs:
       TARGET_BRANCH: ${{ github.event.inputs.target_branch || 'master' }}
       UPSTREAM_REPO: ${{ github.event.inputs.upstream_repo || 'StuffAnThings/qbit_manage' }}
       UPSTREAM_BRANCH: ${{ github.event.inputs.upstream_branch || 'master' }}
+      PUSH_TOKEN: ${{ secrets.WORKFLOWS_TOKEN != '' && secrets.WORKFLOWS_TOKEN || github.token }}
     steps:
       - name: Checkout target branch with full history
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.target_branch || 'master' }}
           fetch-depth: 0
+          token: ${{ env.PUSH_TOKEN }}
 
       - name: Preflight checks
         run: |
