@@ -80,6 +80,13 @@ export const settingsSchema = {
             default: 'LastActiveLimitNotReached'
         },
         {
+            name: 'share_limits_pending_cleanup_tag',
+            type: 'text',
+            label: 'Pending Cleanup Tag',
+            description: 'Tag for torrents in cleanup-eligible groups that have not yet reached max_seeding_time.',
+            default: 'PendingCleanup'
+        },
+        {
             name: 'cat_filter_completed',
             type: 'boolean',
             label: 'Category Filter Completed',
