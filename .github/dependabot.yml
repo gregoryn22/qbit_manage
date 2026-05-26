@@ -11,7 +11,7 @@ updates:
       interval: "weekly"
       time: "07:00"
       timezone: "America/Toronto"
-    target-branch: "develop"
+    target-branch: "main"
     assignees:
       - "bobokun"
     open-pull-requests-limit: 10
@@ -29,7 +29,7 @@ updates:
       timezone: "America/Toronto"
     assignees:
       - "bobokun"
-    target-branch: "develop"
+    target-branch: "main"
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
@@ -41,7 +41,7 @@ updates:
       interval: weekly
       time: "07:00"
       timezone: "America/Toronto"
-    target-branch: develop
+    target-branch: main
     assignees:
       - bobokun
     open-pull-requests-limit: 5
