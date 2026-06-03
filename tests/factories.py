@@ -270,6 +270,7 @@ class FakeConfig:
     share_limits_min_seeding_time_tag: str = "MinSeedTimeNotReached"
     share_limits_min_num_seeds_tag: str = "MinSeedsNotMet"
     share_limits_last_active_tag: str = "LastActiveLimitNotReached"
+    share_limits_pending_cleanup_tag: str = "PendingCleanup"
     tracker_error_tag: str = "TrackerError"
     stalled_tag: str = "Stalled"
     private_tag: str = "Private"
@@ -472,6 +473,7 @@ def make_share_limits(qbt_manager):
     instance.min_seeding_time_tag = qbt_manager.config.share_limits_min_seeding_time_tag
     instance.min_num_seeds_tag = qbt_manager.config.share_limits_min_num_seeds_tag
     instance.last_active_tag = qbt_manager.config.share_limits_last_active_tag
+    instance.pending_cleanup_tag = qbt_manager.config.share_limits_pending_cleanup_tag
     instance.hashes = None
     instance.share_limits_custom_tags = qbt_manager.config.share_limits_custom_tags
     instance.group_tag = None
